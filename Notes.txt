@@ -1,0 +1,34 @@
+﻿RabbitMq Notları:
+
+- rabbit mq management (localhost:15672) için kullanıcı adı ve parola guest dir.
+
+mesaj kuyruk sisteminde producer(gönderici) ve consumer(alıcı) tarafları vardır.
+
+Exchange Types Description:
+
+- Direct Exchange: 
+producer tarafından "routingKey" verilen değer ile gönderilir ve consumer tarafından bu değere göre alınır.
+
+- Topic Exchange: 
+"routingKey" ile işlem yapılır. direct exchange den farkı ise 
+"routingKey" değerinde "*" ve "#" ifadeleri ile tamamlanmasıdır.
+* ifadesi için: 
+	.* => routingKey devamında mutlaka bir belirteç kelime gelecektir. 
+		örnek: abc.* => başında abc ve devamında da bir kelime olan routingKey iletilir.
+	*. => routingKey başında mutlaka bir belirteç kelime gelecektir.
+		örnek: *.abc => sonunda abc olan routingKey iletilir.
+	.*. => bu ifade öncesinde ve sonrasında kelime olmalı.
+		örnek: abc.*.xyz => abc ile başlayan ve xyz ile biten routingKey iletilir.
+	# => tüm kuyruklara mesaj iletilir.
+	.# => routingKey devamında kelime olabilir de olmayabilir de
+		örnek: abc.# => başında abc olan devamında farketmeksizin routingKey iletilir.
+	#. => routingKey başında kelime olabilir se olmayabilir de
+		örnek: #.abc => sonu abc ile biten routingKey iletilir.
+
+- Header Exchange: 
+"routingKey" değerine göre değil header tanımlamasına göre mesaj iletilir. "x-match" key'inin all ve any değerine göre işlem yapar.
+örnek: publisher {key:"no",value:"değer"} header değerine eşdeğer consumer a mesaj iletilecektir.
+
+- Fanout Exchange:
+herhangi bir kriter olmadan tüm conusmer lara eşit olarak mesajın iletilmesini sağlar.
+
