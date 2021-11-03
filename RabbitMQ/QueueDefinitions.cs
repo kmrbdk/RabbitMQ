@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace RabbitMQ
 {
@@ -29,23 +27,24 @@ namespace RabbitMQ
 
         public SystemDefinitions()
         {
-            this.UserName = "guest";
-            this.Password = "guest";
-            this.HostName = "localhost";
+            this.UserName = "";
+            this.Password = "";
+            this.HostName = "";
             this.Uri = "";
 
             this.Exchange = ""; // anahtar kelimeye bakarak ilgili kuyruğa gönderimi sağlıyor
-            this.QueueName = "";
-            this.RoutingKey = ""; //anahtar kelime
+            this.QueueName = ""; // mesaj kuyruk adı
+            this.RoutingKey = ""; // anahtar kelime
 
             this.Message = null;
 
-            this.Durable = true;
-            this.Exclusive = true;
-            this.AutoDelete = false;
-            this.Arguments = null;
+            this.Durable = false; // queue cache demi yoksa fiziksel olarak mı saklanacak? sunucu restart durumuna göre mesajların kaybolmamması için true edilebilir.
+                                  // performans için false yapılabilir.
+            this.Exclusive = true; // diğer connection lar ile beraber kullanılmasına izin verilir.
+            this.AutoDelete = false; // ilgili queue leri silmek için kullanılır.
+            this.Arguments = null; // exchange tipleri ile ilgili parametreler (Header exchange için header bloku)
 
-            this.AutoAck = true;        //mesaj teslim edilidği an silinsin...
+            this.AutoAck = true;        // mesaj teslim edilidği an silinsin...
         }
     }
 }

@@ -1,14 +1,11 @@
 ﻿using Modules;
 using Newtonsoft.Json;
 using RabbitMQ;
+using RabbitMQforNETCore.Models;
+using RabbitMQforNETCore.RabbitMQ;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace RabbitMQforNETCore
@@ -17,6 +14,9 @@ namespace RabbitMQforNETCore
     {
         private readonly SystemDefinitions queue = new SystemDefinitions();        // User / Queue / Echange tanımları
         private IRabbitMQProcess RabbitMQProcess;                       //Kullanılacak RabbitMQ yöntemi (Gateway)
+
+        public string SenRec { get; set; }
+        public string ExchangeType { get; set; }
 
         public testApp()
         {
@@ -28,15 +28,20 @@ namespace RabbitMQforNETCore
             //Thread / [TASK] / Form kontrollerine doğrudan erisime izin verir.
             Control.CheckForIllegalCrossThreadCalls = false;
 
+            PrepareRabbitMQ();
             PrepareApplication();
-            PrepareRabbitMQ();            
         }
         private void BtnConnect_Click(object sender, EventArgs e)
         {
-            OperationResult op;// = new OperationResult();
+            OperationResult op;
+            queue.UserName = textUserName.Text;
+            queue.Password = textPassword.Text;
             queue.HostName = textHostName.Text;
-            queue.Uri= textHostName.Text;
-            op = RabbitMQProcess.Login(queue); 
+            queue.RoutingKey = textRoutingKey.Text;
+            queue.Exchange = textExchange.Text;
+            queue.QueueName = textQueueName.Text;
+
+            op = RabbitMQProcess.Login(queue);
 
             cmbDirection.Visible = !op.Result;
             cmbProvider.Visible = !op.Result;
@@ -44,12 +49,36 @@ namespace RabbitMQforNETCore
 
             ClearResultMessage();
             textResult.Text = JsonConvert.SerializeObject(op);
+
+            if (cmbDirection.Text == "Consumer") // consumer ise kanalı dinlemeye hemen başlamalı
+            {
+                btnGetMessage.PerformClick();
+            }
         }
 
         private void BtnSendMessage_Click(object sender, EventArgs e)
         {
-            OperationResult op;// = new OperationResult();
-            op = RabbitMQProcess.Send(textMessage.Text);
+            OperationResult op;
+
+            Dictionary<string, object> header = new Dictionary<string, object>();
+            if (cmbProvider.Text == "HeaderExchange")
+            {
+                var headList = textHeader.Text.Split(";");
+                foreach (var item in headList)
+                {
+                    var keyValue = item.Split("-").ToList();
+                    var key = keyValue.FirstOrDefault();
+                    var value = keyValue.LastOrDefault();
+                    header.Add(key, value);
+                }
+            }
+            var sendModel = new SendModel
+            {
+                Message = textMessage.Text,
+                Header = header,
+            };
+
+            op = RabbitMQProcess.Send(sendModel);
 
             ClearResultMessage();
             textResult.Text = JsonConvert.SerializeObject(op);
@@ -57,9 +86,9 @@ namespace RabbitMQforNETCore
 
         private void BtnGetMessage_Click(object sender, EventArgs e)
         {
-            OperationResult op;// = new OperationResult();
+            OperationResult op;
 
-            MessageCallBack Object;
+            //MessageCallBack Object;
 
             #region Dönen mesajı event ile alabildiğimiz gibi bu şekilde register olarakta alabiliriz.
             //Object.Object = this;
@@ -68,7 +97,21 @@ namespace RabbitMQforNETCore
             //op = RabbitMQProcess.Register(Object);
             #endregion
 
-            op = RabbitMQProcess.Listen();
+            Dictionary<string, object> header = new Dictionary<string, object>();
+            if (cmbProvider.SelectedIndex == (int)ExchangeDesc.HeaderExchange)
+            {
+                header.Add("x-match", "any");
+                var headList = textHeader.Text.Split(";");
+                foreach (var item in headList)
+                {
+                    var keyValue = item.Split("-").ToList();
+                    var key = keyValue.FirstOrDefault();
+                    var value = keyValue.LastOrDefault();
+                    header.Add(key, value);
+                }
+            }
+
+            op = RabbitMQProcess.Listen(header);
 
             ClearResultMessage();
             textResult.Text = JsonConvert.SerializeObject(op);
@@ -87,11 +130,10 @@ namespace RabbitMQforNETCore
 
         private void PrepareRabbitMQ()
         {
-
             Dictionary<string, int> comboDirectionSource = new Dictionary<string, int>()
             {
-                {"Publisher", 0},
-                {"Consumer", 1}
+                {Enum.GetName(typeof(SendRec),0), 0},
+                {Enum.GetName(typeof(SendRec),1), 1}
             };
             cmbDirection.DataSource = new BindingSource(comboDirectionSource, null);
             cmbDirection.DisplayMember = "Key";
@@ -100,11 +142,11 @@ namespace RabbitMQforNETCore
             //QueueDeclare / DirectExchangePublisher / TopicExchangePublisher / HeaderExchangePublisher / FanoutExchangePublisher
             Dictionary<string, int> cmbProviderSource = new Dictionary<string, int>()
             {
-                {"QueueDeclare", 0},
-                {"DirectExchangePublisher", 1},
-                {"TopicExchangePublisher", 2},
-                {"HeaderExchangePublisher", 3},
-                {"FanoutExchangePublisher", 4}
+                {Enum.GetName(typeof(ExchangeDesc),0), 0},
+                {Enum.GetName(typeof(ExchangeDesc),1), 1},
+                {Enum.GetName(typeof(ExchangeDesc),2), 2},
+                {Enum.GetName(typeof(ExchangeDesc),3), 3},
+                {Enum.GetName(typeof(ExchangeDesc),4), 4}
             };
 
             cmbProvider.DataSource = new BindingSource(cmbProviderSource, null);
@@ -113,7 +155,6 @@ namespace RabbitMQforNETCore
 
             cmbProvider.SelectedIndex = 0;
             cmbDirection.SelectedIndex = 0;
-
         }
 
         private void ClearResultMessage()
@@ -137,55 +178,75 @@ namespace RabbitMQforNETCore
         {
             textMessageArrived.Text = Message;
         }
-        
+
         private void SetQueueInformation()
         {
-            string PublishModel = cmbProvider.Text;
             bool status = true;
 
-            queue.UserName = textUserName.Text;
-            queue.Password = textPassword.Text;
-            queue.HostName = textHostName.Text;
-            queue.Exchange = textExchange.Text;
-            queue.QueueName = textQueueName.Text;
-            queue.RoutingKey = textRoutingKey.Text;
-            queue.Uri = "";
+            switch (cmbProvider.SelectedIndex)
+            {
+                case (int)ExchangeDesc.QueueDeclare:
+                    QueueDeclare qd = new QueueDeclare();
+                    qd.MessageReceived += QD_MessageReceived;
+                    RabbitMQProcess = new RabbitMQProcess(qd);
+
+                    textQueueName.Text = "Queue-QueueDeclare";
+                    textExchange.Text = "";
+                    textHeader.Text = "";
+                    textRoutingKey.Text = "";
+
+                    break;
+                case (int)ExchangeDesc.DirectExchange:
+                    DirectExchange de = new DirectExchange();
+                    de.MessageReceived += QD_MessageReceived;
+                    RabbitMQProcess = new RabbitMQProcess(de);
+
+                    textQueueName.Text = "Queue-DirectExchange";
+                    textExchange.Text = "DirectExchangeQueue";
+                    textHeader.Text = "";
+                    textRoutingKey.Text = "";
+
+                    break;
+                case (int)ExchangeDesc.TopicExchange:
+                    TopicExchange te = new TopicExchange();
+                    te.MessageReceived += QD_MessageReceived;
+                    RabbitMQProcess = new RabbitMQProcess(te);
+
+                    textQueueName.Text = "Queue-TopicExchange";
+                    textExchange.Text = "TopicExchangeQueue";
+                    textHeader.Text = "";
+                    textRoutingKey.Text = "";
+
+                    break;
+                case (int)ExchangeDesc.HeaderExchange:
+                    HeaderExchange he = new HeaderExchange();
+                    he.MessageReceived += QD_MessageReceived;
+                    RabbitMQProcess = new RabbitMQProcess(he);
+
+                    textQueueName.Text = "Queue-HeaderExchange";
+                    textExchange.Text = "HeaderExchangeQueue";
+                    textHeader.Text = "";
+                    textRoutingKey.Text = "";
+
+                    break;
+                case (int)ExchangeDesc.FanoutExchange:
+                    FanoutExchange fe = new FanoutExchange();
+                    fe.MessageReceived += QD_MessageReceived;
+                    RabbitMQProcess = new RabbitMQProcess(fe);
+
+                    textQueueName.Text = "Queue-FanoutExchange";
+                    textExchange.Text = "FanoutExchangeQueue";
+                    textHeader.Text = "";
+                    textRoutingKey.Text = "";
+
+                    break;
+            }
 
             textExchange.Enabled = status;
             textRoutingKey.Enabled = status;
+            textHeader.Enabled = status;
 
             textQueueName.Enabled = !status;
-
-            switch (PublishModel)
-            {
-                case "QueueDeclare":
-                    queue.QueueName = textQueueName.Text;
-                    textExchange.Enabled = !status;
-                    textRoutingKey.Enabled = !status;
-                    textQueueName.Enabled = status;
-
-                    QueueDeclare qd = new QueueDeclare();
-                    qd.MessageReceived += QD_MessageReceived; //Mesajları Register ile alabildiğimiz gibi Event i de tanımşayabiiriz.
-
-                    RabbitMQProcess = new RabbitMQProcess(qd);
-                    break;
-                    //case "My Sql":
-                    //    msProcess = new MySqlProcess();
-                    //            queue.Exchange = textExchange.Text;
-                    //queue.RoutingKey = textRoutingKey.Text;
-                    //    break;
-                    //case "Mongo":
-                    //    msProcess = new MongoProcess();
-                    //    break;
-                    //default:
-                    //    msProcess = new MsSqlProcess();
-                    //    break;
-            }
-
-            queue.Durable = true;
-            queue.Exclusive = false;
-            queue.AutoDelete = false;
-            queue.Arguments = null;
 
             ClearResultMessage();
         }
@@ -193,42 +254,42 @@ namespace RabbitMQforNETCore
         private void PrepareApplication()
         {
             bool status = true;
-            textMessage.Text = "Hello RabbitMQ";
+            textMessage.Text = "";
             textResult.Text = "";
             textMessageArrived.Text = "";
 
-            btnConnect.Visible = status;                        
-            textMessageArrived.Text = "";
-            btnGetMessage.Visible = status;
-            btnSendMessage.Visible = status;
+            btnConnect.Visible = status;
+            textQueueName.Enabled = !status;
 
-            lblMessage.Visible = status;
-            textMessage.Visible = status;
-
-            //lblMessageArrived.Visible = status;
-            textMessageArrived.Visible = status;
-
-            textExchange.Enabled = status;
-            textRoutingKey.Enabled = status;
-
-            string PublishModel = cmbDirection.Text;
-            switch (PublishModel)
+            switch (cmbDirection.SelectedIndex)
             {
-                case "Publisher":
-                    textQueueName.Enabled = status;
+                case (int)SendRec.Publisher:
                     btnGetMessage.Visible = !status;
-                    //lblMessageArrived.Visible = !status;
+                    btnSendMessage.Visible = status;
                     textMessageArrived.Visible = !status;
+                    textMessage.Visible = status;
                     break;
-                case "Consumer":                    
+                case (int)SendRec.Consumer:
+                    btnGetMessage.Visible = status;
                     btnSendMessage.Visible = !status;
-                    //lblMessage.Visible = !status;
                     textMessage.Visible = !status;
+                    textMessageArrived.Visible = status;
                     break;
             }
+        }
 
-            textExchange.Enabled = status;
-            textRoutingKey.Enabled = status;
+        private void btnClose_Click(object sender, EventArgs e)
+        {
+            var op = RabbitMQProcess.Close();
+
+            if (op.Result)
+            {
+                PrepareApplication();
+
+                cmbDirection.Visible = op.Result;
+                cmbProvider.Visible = op.Result;
+                btnConnect.Visible = op.Result;
+            }
         }
     }
 }

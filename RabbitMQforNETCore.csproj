@@ -7,12 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="RabbitMQ.Client" Version="6.2.2" />
+    <Compile Remove="RabbitMQ\IExchangeTypes\**" />
+    <EmbeddedResource Remove="RabbitMQ\IExchangeTypes\**" />
+    <None Remove="RabbitMQ\IExchangeTypes\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="RabbitMQ\IExchangeTypes\" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.2.2" />
   </ItemGroup>
 
 </Project>

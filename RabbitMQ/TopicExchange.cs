@@ -1,15 +1,15 @@
 ﻿using Modules;
+using RabbitMQ;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQforNETCore.Models;
 using System;
 using System.Text;
 
-namespace RabbitMQ
+namespace RabbitMQforNETCore.RabbitMQ
 {
-    class QueueDeclare : IRabbitMQProcess
+    public class TopicExchange : IRabbitMQProcess
     {
-        #region User variables
         internal delegate void delEventHandler(string Message);
         internal event delEventHandler MessageReceived;
 
@@ -17,9 +17,6 @@ namespace RabbitMQ
         private ConnectionFactory _factory;
         private IConnection _connection;
         private IModel _channel;
-
-        //public MessageCallBack _object;
-        #endregion
 
         public OperationResult Login(SystemDefinitions Queue)
         {
@@ -36,16 +33,14 @@ namespace RabbitMQ
                 _connection = _factory.CreateConnection();
                 _channel = _connection.CreateModel();
 
-                _channel.QueueDeclare(
-                                       queue: _queue.QueueName,
-                                       durable: false,
-                                       exclusive: false,
-                                       autoDelete: false,
-                                       arguments: null
-                                        );
+                _channel.ExchangeDeclare(
+                                        exchange: _queue.Exchange,
+                                        durable: false,
+                                        type: ExchangeType.Topic
+                                    );
+
                 #endregion
 
-                //Tam şu anda RabbitMQ Queues sekmesine bakılırsa ilgili Queue oluşmuş olmalı...
             }
             catch (Exception ex)
             {
@@ -55,6 +50,7 @@ namespace RabbitMQ
 
             return op;
         }
+
         public OperationResult Close()
         {
             try
@@ -71,12 +67,15 @@ namespace RabbitMQ
                 return new OperationResult { Message = ex.ToString(), Result = false };
             }
         }
+
         public OperationResult Send(SendModel sendModel)
         {
             OperationResult op = new OperationResult();
             try
             {
-                _queue.Exchange = "";
+                if (_queue.RoutingKey.IndexOf(".") == -1)
+                    return new OperationResult { Result = false, Message = "Route yapısında '.' belirteci olmalıdır." };
+
                 if (_channel.IsClosed)      //RabbitMQ ile bağlantı kopmuş ise tekrar yapalım.
                     Login(_queue);
 
@@ -86,7 +85,8 @@ namespace RabbitMQ
                 //Mesaj dönüştürülüyor...
                 byte[] body = Encoding.UTF8.GetBytes(sendModel.Message);
 
-                _channel.BasicPublish(exchange: _queue.Exchange, routingKey: _queue.QueueName, basicProperties: properties, body: body);
+                // bu method döngüye girebilir. routingKey elemanlı bir döngü olacaktır.
+                _channel.BasicPublish(exchange: _queue.Exchange, routingKey: _queue.RoutingKey, basicProperties: properties, body: body);
             }
             catch (Exception ex)
             {
@@ -96,26 +96,36 @@ namespace RabbitMQ
 
             return op;
         }
+
         public OperationResult Listen(dynamic model = null)
         {
             OperationResult op = new OperationResult();
 
             try
             {
-                _queue.Exchange = "";
+                if (_queue.RoutingKey.IndexOf(".") == -1)
+                    if (_queue.RoutingKey != "#")
+                        return new OperationResult { Result = false, Message = "Route yapısında . belirteci olmalıdır veya sadece # yazılmalıdır." };
+
                 if (_channel.IsClosed)      //RabbitMQ ile bağlantı kopmuş ise tekrar yapalım.
                     Login(_queue);
 
-                _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+                var queueName = _channel.QueueDeclare().QueueName;
 
+                // queueBind methodunu bir döngüye sokup birden fazla mesaj alınabilir. routingKey elemanlı bir döngü olacaktır.
+                _channel.QueueBind(queue: queueName, exchange: _queue.Exchange, routingKey: _queue.RoutingKey);
+
+                _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
                 var consumer = new EventingBasicConsumer(_channel);
+                _channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
+
                 consumer.Received += (render, argument) =>
                 {
                     string message = Encoding.UTF8.GetString(argument.Body.ToArray());
                     MessageReceived(message);
+                    _channel.BasicAck(deliveryTag: argument.DeliveryTag, false);
                 };
 
-                _channel.BasicConsume(queue: _queue.QueueName, autoAck: true, consumer: consumer);
             }
             catch (Exception ex)
             {
@@ -125,50 +135,5 @@ namespace RabbitMQ
 
             return op;
         }
-        //internal void Consumer_Received(object sender, BasicDeliverEventArgs e)
-        //{
-        //    string message;
-        //    Byte[] body;
-        //    try
-        //    {
-        //        body = e.Body.ToArray();
-        //        message = Encoding.UTF8.GetString(body);
-
-        //        //AutoAck = true verilmiş ise zaten teslim edildiği ana silineceği için hata alacaktır. Bu yüzden disable edildi. [Otomatik siliniyor]
-        //        //_channel.BasicAck(deliveryTag: e.DeliveryTag, multiple: false);
-
-        //        MessageReceived(message);    //Event i dinleyen varsa iletelim.
-
-        //        //Sisteme register olmuş ise ilgili nesneye mesajı iletelim.
-        //        if (_object != null)
-        //        {
-        //            string[] args = new string[] { message };
-
-        //            var method = ((object)_object.Object).GetType().GetMethod(_object.MethodName);
-        //            method.Invoke(_object.Object, args);
-        //        }
-        //    }
-        //    catch (Exception exception)
-        //    {
-        //        Console.WriteLine(exception);
-        //    }
-        //}
-        //public OperationResult Register(MessageCallBack Object)
-        //{
-        //    OperationResult op = new OperationResult();
-
-        //    try
-        //    {
-        //        if (Object != null)         //Gelen mesajların dönüş noktası istenmiş.
-        //            _object = Object;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        op.Result = false;
-        //        op.Message = ex.Message;
-        //    }
-
-        //    return op;
-        //}
     }
 }

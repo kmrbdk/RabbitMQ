@@ -153,11 +153,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\kamer.budak\\Desktop\\RabbitMQforNETCore\\RabbitMQforNETCore\\RabbitMQforNETCore.csproj",
+      "projectUniqueName": "C:\\Users\\kamer.budak\\Desktop\\RabbitMQ\\RabbitMQ\\RabbitMQforNETCore.csproj",
       "projectName": "RabbitMQforNETCore",
-      "projectPath": "C:\\Users\\kamer.budak\\Desktop\\RabbitMQforNETCore\\RabbitMQforNETCore\\RabbitMQforNETCore.csproj",
+      "projectPath": "C:\\Users\\kamer.budak\\Desktop\\RabbitMQ\\RabbitMQ\\RabbitMQforNETCore.csproj",
       "packagesPath": "C:\\Users\\kamer.budak\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\kamer.budak\\Desktop\\RabbitMQforNETCore\\RabbitMQforNETCore\\obj\\",
+      "outputPath": "C:\\Users\\kamer.budak\\Desktop\\RabbitMQ\\RabbitMQ\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft\\Xamarin\\NuGet\\",

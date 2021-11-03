@@ -1,8 +1,6 @@
 ﻿using Modules;
-using RabbitMQ.Client.Events;
+using RabbitMQforNETCore.Models;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace RabbitMQ
 {
@@ -20,7 +18,7 @@ namespace RabbitMQ
 
         // RabbitMQ ile kanal (queue / exchange) oluşturma
         public OperationResult Login(SystemDefinitions Queue)
-        {            
+        {
             OperationResult op = new OperationResult();
             try
             {
@@ -29,19 +27,19 @@ namespace RabbitMQ
             catch (Exception ex)
             {
                 op.Result = false;
-                op.Message = ex.Message;                
+                op.Message = ex.Message;
             }
 
             return op;
         }
 
         // Oluşturulan kanala (queue / exchange) mesaj gönderme
-        public OperationResult Send(string Message)
+        public OperationResult Send(SendModel sendModel)
         {
             OperationResult op = new OperationResult();
             try
             {
-               op = _RabbitMQ.Send(Message);
+                op = _RabbitMQ.Send(sendModel);
             }
             catch (Exception ex)
             {
@@ -53,12 +51,12 @@ namespace RabbitMQ
         }
 
         // Oluşturulan kanaldan (queue / exchange) mesajları almak
-        public OperationResult Listen()
+        public OperationResult Listen(dynamic model = null)
         {
             OperationResult op = new OperationResult();
             try
             {
-                op = _RabbitMQ.Listen();
+                op = _RabbitMQ.Listen(model);
             }
             catch (Exception ex)
             {
@@ -70,12 +68,29 @@ namespace RabbitMQ
         }
 
         // Oluşturulan kanaldan (queue / exchange) mesajları almak
-        public OperationResult Register(MessageCallBack Object)
+        //public OperationResult Register(MessageCallBack Object)
+        //{
+        //    OperationResult op = new OperationResult();
+        //    try
+        //    {
+        //        op = _RabbitMQ.Register(Object);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        op.Result = false;
+        //        op.Message = ex.Message;
+        //    }
+
+        //    return op;
+        //}
+
+        // RabbitMQ bağalntı / kanal kapatma
+        public OperationResult Close()
         {
             OperationResult op = new OperationResult();
             try
             {
-                op = _RabbitMQ.Register(Object);
+                op = _RabbitMQ.Close();
             }
             catch (Exception ex)
             {
@@ -84,6 +99,6 @@ namespace RabbitMQ
             }
 
             return op;
-        }        
+        }
     }
 }

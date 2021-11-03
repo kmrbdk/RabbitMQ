@@ -51,6 +51,9 @@ namespace RabbitMQforNETCore
             this.cmbDirection = new System.Windows.Forms.ComboBox();
             this.btnGetMessage = new System.Windows.Forms.Button();
             this.textMessageArrived = new System.Windows.Forms.TextBox();
+            this.label7 = new System.Windows.Forms.Label();
+            this.textHeader = new System.Windows.Forms.TextBox();
+            this.btnClose = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // cmbProvider
@@ -123,7 +126,7 @@ namespace RabbitMQforNETCore
             this.textExchange.Location = new System.Drawing.Point(98, 132);
             this.textExchange.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.textExchange.Name = "textExchange";
-            this.textExchange.Size = new System.Drawing.Size(166, 27);
+            this.textExchange.Size = new System.Drawing.Size(337, 27);
             this.textExchange.TabIndex = 8;
             // 
             // label4
@@ -140,9 +143,8 @@ namespace RabbitMQforNETCore
             this.textQueueName.Location = new System.Drawing.Point(98, 171);
             this.textQueueName.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.textQueueName.Name = "textQueueName";
-            this.textQueueName.Size = new System.Drawing.Size(166, 27);
+            this.textQueueName.Size = new System.Drawing.Size(337, 27);
             this.textQueueName.TabIndex = 10;
-            this.textQueueName.Text = "demo-queue";
             // 
             // label5
             // 
@@ -158,7 +160,7 @@ namespace RabbitMQforNETCore
             this.textRoutingKey.Location = new System.Drawing.Point(98, 209);
             this.textRoutingKey.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.textRoutingKey.Name = "textRoutingKey";
-            this.textRoutingKey.Size = new System.Drawing.Size(166, 27);
+            this.textRoutingKey.Size = new System.Drawing.Size(337, 27);
             this.textRoutingKey.TabIndex = 12;
             // 
             // label6
@@ -172,7 +174,7 @@ namespace RabbitMQforNETCore
             // 
             // textMessage
             // 
-            this.textMessage.Location = new System.Drawing.Point(98, 248);
+            this.textMessage.Location = new System.Drawing.Point(98, 304);
             this.textMessage.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.textMessage.Multiline = true;
             this.textMessage.Name = "textMessage";
@@ -183,7 +185,7 @@ namespace RabbitMQforNETCore
             // lblMessage
             // 
             this.lblMessage.AutoSize = true;
-            this.lblMessage.Location = new System.Drawing.Point(8, 252);
+            this.lblMessage.Location = new System.Drawing.Point(8, 308);
             this.lblMessage.Name = "lblMessage";
             this.lblMessage.Size = new System.Drawing.Size(67, 20);
             this.lblMessage.TabIndex = 13;
@@ -192,7 +194,7 @@ namespace RabbitMQforNETCore
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(8, 372);
+            this.label8.Location = new System.Drawing.Point(8, 428);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(49, 20);
             this.label8.TabIndex = 15;
@@ -200,19 +202,19 @@ namespace RabbitMQforNETCore
             // 
             // textResult
             // 
-            this.textResult.Location = new System.Drawing.Point(98, 368);
+            this.textResult.Location = new System.Drawing.Point(98, 424);
             this.textResult.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.textResult.Multiline = true;
             this.textResult.Name = "textResult";
-            this.textResult.Size = new System.Drawing.Size(507, 68);
+            this.textResult.Size = new System.Drawing.Size(507, 124);
             this.textResult.TabIndex = 16;
             // 
             // btnConnect
             // 
-            this.btnConnect.Location = new System.Drawing.Point(272, 97);
+            this.btnConnect.Location = new System.Drawing.Point(441, 97);
             this.btnConnect.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnConnect.Name = "btnConnect";
-            this.btnConnect.Size = new System.Drawing.Size(163, 33);
+            this.btnConnect.Size = new System.Drawing.Size(164, 33);
             this.btnConnect.TabIndex = 17;
             this.btnConnect.Text = "Connect";
             this.btnConnect.UseVisualStyleBackColor = true;
@@ -220,7 +222,7 @@ namespace RabbitMQforNETCore
             // 
             // btnSendMessage
             // 
-            this.btnSendMessage.Location = new System.Drawing.Point(442, 207);
+            this.btnSendMessage.Location = new System.Drawing.Point(441, 246);
             this.btnSendMessage.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnSendMessage.Name = "btnSendMessage";
             this.btnSendMessage.Size = new System.Drawing.Size(163, 33);
@@ -242,7 +244,7 @@ namespace RabbitMQforNETCore
             // 
             // btnGetMessage
             // 
-            this.btnGetMessage.Location = new System.Drawing.Point(272, 207);
+            this.btnGetMessage.Location = new System.Drawing.Point(441, 200);
             this.btnGetMessage.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnGetMessage.Name = "btnGetMessage";
             this.btnGetMessage.Size = new System.Drawing.Size(163, 33);
@@ -253,18 +255,49 @@ namespace RabbitMQforNETCore
             // 
             // textMessageArrived
             // 
-            this.textMessageArrived.Location = new System.Drawing.Point(98, 248);
+            this.textMessageArrived.Location = new System.Drawing.Point(98, 304);
             this.textMessageArrived.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.textMessageArrived.Multiline = true;
             this.textMessageArrived.Name = "textMessageArrived";
             this.textMessageArrived.Size = new System.Drawing.Size(507, 93);
             this.textMessageArrived.TabIndex = 21;
             // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(12, 255);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(58, 20);
+            this.label7.TabIndex = 22;
+            this.label7.Text = "Header";
+            // 
+            // textHeader
+            // 
+            this.textHeader.Location = new System.Drawing.Point(98, 252);
+            this.textHeader.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.textHeader.Name = "textHeader";
+            this.textHeader.Size = new System.Drawing.Size(337, 27);
+            this.textHeader.TabIndex = 23;
+            // 
+            // btnClose
+            // 
+            this.btnClose.Location = new System.Drawing.Point(441, 138);
+            this.btnClose.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.btnClose.Name = "btnClose";
+            this.btnClose.Size = new System.Drawing.Size(164, 33);
+            this.btnClose.TabIndex = 24;
+            this.btnClose.Text = "Close";
+            this.btnClose.UseVisualStyleBackColor = true;
+            this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
+            // 
             // testApp
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(616, 445);
+            this.ClientSize = new System.Drawing.Size(619, 566);
+            this.Controls.Add(this.btnClose);
+            this.Controls.Add(this.textHeader);
+            this.Controls.Add(this.label7);
             this.Controls.Add(this.textMessageArrived);
             this.Controls.Add(this.btnGetMessage);
             this.Controls.Add(this.cmbDirection);
@@ -320,6 +353,9 @@ namespace RabbitMQforNETCore
         private System.Windows.Forms.ComboBox cmbDirection;
         private System.Windows.Forms.Button btnGetMessage;
         private System.Windows.Forms.TextBox textMessageArrived;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.TextBox textHeader;
+        private System.Windows.Forms.Button btnClose;
     }
 }
 
